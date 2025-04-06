@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pulumi Deploy and Document Challenge - Color Recall Challenge by Nizzad</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #2d3436, #636e72);
+      color: #dfe6e9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      height: 100vh;
+      justify-content: center;
+    }
+    .game-container {
+      background: rgba(44, 62, 80, 0.9);
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 800px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    p {
+      margin-top: 0;
+      font-size: 1em;
+    }
+    #start-button {
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #00b894;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    #start-button:hover {
+      background-color: #019875;
+    }
+    #display-panel {
+      margin: 20px auto;
+      width: 150px;
+      height: 150px;
+      border-radius: 12px;
+      background-color: #dfe6e9;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+    }
+    #message {
+      margin-top: 15px;
+      font-size: 1.1em;
+    }
+    .control-panel {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
+    .color-button {
+      width: 60px;
+      height: 60px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .color-button:hover {
+      transform: scale(1.1);
+      opacity: 0.8;
+    }
+    .color-red { background-color: #e74c3c; }
+    .color-blue { background-color: #3498db; }
+    .color-green { background-color: #2ecc71; }
+    .color-yellow { background-color: #f1c40f; }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Color Recall Challenge</h1>
+    <h2>Pulumi Deploy and Document Challenge by Nizzad</h2>
+    <p>Memorize the sequence of colors and then repeat it by clicking the buttons below.</p>
+    <button id="start-button">Start Game</button>
+    <div id="display-panel"></div>
+    <div id="message"></div>
+    <div class="control-panel">
+      <button class="color-button color-red" data-color="red"></button>
+      <button class="color-button color-blue" data-color="blue"></button>
+      <button class="color-button color-green" data-color="green"></button>
+      <button class="color-button color-yellow" data-color="yellow"></button>
+    </div>
+  </div>
+
+  <script>
+    // Game Variables
+    const startButton = document.getElementById('start-button');
+    const displayPanel = document.getElementById('display-panel');
+    const message = document.getElementById('message');
+    const colorButtons = document.querySelectorAll('.color-button');
+
+    let sequence = [];
+    let playerSequence = [];
+    let level = 0;
+    let isDisplaying = false;
+
+    const colors = ['red', 'blue', 'green', 'yellow'];
+
+    // Get a random color from the array
+    function randomColor() {
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // Function to display the color sequence to the player
+    function displaySequence() {
+      isDisplaying = true;
+      message.textContent = 'Watch the sequence!';
+      let index = 0;
+      const interval = setInterval(() => {
+        // Update panel with current color
+        displayPanel.style.backgroundColor = getColorValue(sequence[index]);
+        setTimeout(() => {
+          displayPanel.style.backgroundColor = '#dfe6e9';
+        }, 400);
+        index++;
+        if (index >= sequence.length) {
+          clearInterval(interval);
+          setTimeout(() => {
+            isDisplaying = false;
+            message.textContent = 'Your turn! Repeat the sequence.';
+          }, 500);
+        }
+      }, 800);
+    }
+
+    // Return the hex value for each color
+    function getColorValue(color) {
+      switch(color) {
+        case 'red':
+          return '#e74c3c';
+        case 'blue':
+          return '#3498db';
+        case 'green':
+          return '#2ecc71';
+        case 'yellow':
+          return '#f1c40f';
+        default:
+          return '#dfe6e9';
+      }
+    }
+
+    // Start the game by resetting variables and starting the first level
+    function startGame() {
+      sequence = [];
+      playerSequence = [];
+      level = 0;
+      nextLevel();
+    }
+
+    // Add a new color to the sequence and display it
+    function nextLevel() {
+      level++;
+      message.textContent = `Level ${level}`;
+      playerSequence = [];
+      sequence.push(randomColor());
+      setTimeout(() => {
+        displaySequence();
+      }, 800);
+    }
+
+    // Check player's input against the generated sequence
+    function checkSequence() {
+      for (let i = 0; i < playerSequence.length; i++) {
+        if (playerSequence[i] !== sequence[i]) {
+          message.textContent = 'Wrong sequence! Game Over.';
+          isDisplaying = true;
+          startButton.disabled = false;
+          return;
+        }
+      }
+      if (playerSequence.length === sequence.length) {
+        message.textContent = 'Correct! Get ready for the next level.';
+        setTimeout(nextLevel, 1000);
+      }
+    }
+
+    // Event listeners for each color button click
+    colorButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (isDisplaying) return;
+        const color = btn.getAttribute('data-color');
+        playerSequence.push(color);
+        // Provide quick visual feedback by flashing the panel
+        displayPanel.style.backgroundColor = getColorValue(color);
+        setTimeout(() => {
+          displayPanel.style.backgroundColor = '#dfe6e9';
+        }, 300);
+        checkSequence();
+      });
+    });
+
+    // Start the game when the start button is clicked
+    startButton.addEventListener('click', () => {
+      startButton.disabled = true;
+      startGame();
+    });
+  </script>
+</body>
+</html>
